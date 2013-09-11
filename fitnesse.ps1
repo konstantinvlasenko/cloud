@@ -1,21 +1,10 @@
 $config = iex (new-object System.Text.ASCIIEncoding).GetString((Invoke-WebRequest -Uri http://169.254.169.254/latest/user-data -UseBasicParsing).Content)
+Set-DefaultAWSRegion us-east-1
 if($config.ssh -ne $null) {
   # download .ssh folder from AWS S3
   Read-S3Object -BucketName $config.ssh.Bucket -KeyPrefix $config.ssh.KeyPrefix -Folder "$($env:USERPROFILE)\.ssh"
 }
-if($config.fitnesse -ne $null) {
-  cd c:\
-  # clone PowerSlim
-  git clone https://github.com/konstantinvlasenko/PowerSlim.git
-  # download Fitnesse
-  (new-object System.Net.WebClient).DownloadFile('http://fitnesse.org/fitnesse-standalone.jar?responder=releaseDownload&release=20130530', 'c:\PowerSlim\fitnesse-standalone.jar')
-  iex $config.fitnesse
-  # start Fitnesse 
-  cd c:\PowerSlim
-  java -jar fitnesse-standalone.jar -d c:\fitnesse -p 8081
-}
 
-Set-DefaultAWSRegion us-east-1
 $r53=[Amazon.AWSClientFactory]::CreateAmazonRoute53Client()
 $ec2=[Amazon.AWSClientFactory]::CreateAmazonEC2Client()
 function r53-delete-dns($name){
@@ -51,15 +40,6 @@ function ec2-set-instance-name($instid, $name){
 $cname = (Invoke-WebRequest -Uri http://169.254.169.254/latest/meta-data/public-hostname -UseBasicParsing).Content
 $instanceId = (Invoke-WebRequest -Uri http://169.254.169.254/latest/meta-data/instance-id -UseBasicParsing).Content
 
-# set instance name
-ec2-set-instance-name $instanceId "ci.$($config.DomainName)"
-# update DNS (AWS R53)
-if($config.fitnesse -ne $null) {
-  r53-set-dns "fitnesse.$($config.DomainName)" $cname
-  # set instance name
-  ec2-set-instance-name $instanceId "fitnesse.$($config.DomainName)"
-}
-r53-set-dns "ci.$($config.DomainName)" $cname
 # attach EBS volume with TeamCity data
 $filter = new-object Amazon.EC2.Model.Filter  
 $filter.Name = 'tag:Name'  
@@ -68,5 +48,24 @@ $volumeId = (Get-EC2Volume -Filter $filter).VolumeId
 Add-EC2Volume $volumeId $instanceId xvdf
 # start TeamCity
 start-service TeamCity
+
+# set instance name
+ec2-set-instance-name $instanceId "ci.$($config.DomainName)"
+r53-set-dns "ci.$($config.DomainName)" $cname
+
+if($config.fitnesse -ne $null) {
+  r53-set-dns "fitnesse.$($config.DomainName)" $cname
+  # set instance name
+  ec2-set-instance-name $instanceId "fitnesse.$($config.DomainName)"
+  cd c:\
+  # clone PowerSlim
+  git clone https://github.com/konstantinvlasenko/PowerSlim.git
+  # download Fitnesse
+  (new-object System.Net.WebClient).DownloadFile('http://fitnesse.org/fitnesse-standalone.jar?responder=releaseDownload&release=20130530', 'c:\PowerSlim\fitnesse-standalone.jar')
+  iex $config.fitnesse
+  # start Fitnesse 
+  cd c:\PowerSlim
+  java -jar fitnesse-standalone.jar -d c:\fitnesse -p 8081
+}
 
 
