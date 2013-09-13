@@ -1,5 +1,12 @@
 param($lab)
 $lab | % { $_ | Out-Default }
+# check if the lab already started
+$instances = Get-EC2Tag | ? ResourceType -eq Instance | ? Key -eq Name | ? Value -eq $lab[0].name | % ResourceId | % { Get-EC2InstanceStatus $_ } | ? { $_.InstanceState.Code -eq 16}
+if($instances -ne $null) {
+  "Lab already started. Exiting..." | Out-Default
+  return
+}
+
 $config = iex (new-object System.Text.ASCIIEncoding).GetString((Invoke-WebRequest -Uri http://169.254.169.254/latest/user-data -UseBasicParsing).Content)
 Set-DefaultAWSRegion us-east-1
 
