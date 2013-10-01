@@ -11,7 +11,7 @@ $config = iex (new-object System.Text.ASCIIEncoding).GetString((Invoke-WebReques
 Set-DefaultAWSRegion us-east-1
 
 # obtain all Private images
-$images = Get-EC2Image | ? OwnerId -eq 637921189560
+$images = Get-EC2Image | ? Visibility -eq Private
 
 # S3Reader role
 $role = Get-IAMInstanceProfileForRole S3Reader
