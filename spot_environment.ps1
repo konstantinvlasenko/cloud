@@ -88,24 +88,3 @@ Invoke-Command -computer $lab.instance.PrivateIpAddress -script {
 Invoke-Command -computer $lab.instance.PrivateIpAddress -script {
   netsh advfirewall set allprofiles state off
 }
-
-function Test-TcpPort($target, $port)
-{
-    $ErrorActionPreference = 'SilentlyContinue'
-    $s = new-object Net.Sockets.TcpClient
-    $s.Connect($target, $port)
-    if ($s.Connected) {
-        $s.Close()
-        return $true
-    }
-    return $false
-}
-if($config.fitnesse -ne $null) {
-  "wait for PowerSlim response..." | Out-Default
-  do {
-    Sleep 60
-    $lab | ? { $_.PowerSlim -ne $true } | % { $_.PowerSlim = Test-TcpPort $_.name 35 }
-    $lab | % { "[$($_.name)]`tPowerSlim = $($_.PowerSlim)" | Out-Default }
-  } while( ($lab | ? { $_.PowerSlim -ne $true }) -ne $null )
-}
-
