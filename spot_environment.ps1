@@ -1,4 +1,7 @@
 param($lab)
+$config = iex (new-object System.Text.ASCIIEncoding).GetString((Invoke-WebRequest -Uri http://169.254.169.254/latest/user-data -UseBasicParsing).Content)
+Set-DefaultAWSRegion us-east-1
+$lab | % { $_.name += ".$($config.DomainName)" }
 $lab | % { $_ | Out-Default }
 # check if the lab already started
 $instances = Get-EC2Tag | ? ResourceType -eq Instance | ? Key -eq Name | ? Value -eq $lab[0].name | % ResourceId | % { Get-EC2InstanceStatus $_ } | ? { $_.InstanceState.Code -eq 16}
@@ -6,9 +9,6 @@ if($instances -ne $null) {
   "Lab already started. Exiting..." | Out-Default
   exit -1
 }
-
-$config = iex (new-object System.Text.ASCIIEncoding).GetString((Invoke-WebRequest -Uri http://169.254.169.254/latest/user-data -UseBasicParsing).Content)
-Set-DefaultAWSRegion us-east-1
 
 # obtain all Private images
 $images = Get-EC2Image | ? Visibility -eq Private
