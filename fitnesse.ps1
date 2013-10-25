@@ -53,6 +53,9 @@ start-service TeamCity
 ec2-set-instance-name $instanceId "ci.$($config.DomainName)"
 r53-set-dns "ci.$($config.DomainName)" $cname
 
+# search computer by name
+Invoke-WmiMethod -path Win32_NetworkAdapterConfiguration -Name SetDNSSuffixSearchOrder -ArgumentList @($config.DomainName)
+
 if($config.fitnesse -ne $null) {
   r53-set-dns "fitnesse.$($config.DomainName)" $cname
   # set instance name
