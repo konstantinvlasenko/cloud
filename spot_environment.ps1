@@ -47,23 +47,7 @@ $lab | % { $_.instance = (Get-EC2Instance $_.request.InstanceId).RunningInstance
 $lab | % { "[$($_.name)]`t$($_.instance.PublicDnsName)" | Out-Default }
 
 # update R53
-foreach($computer in $lab){
-  "[$($computer.name)]`t[R53] update... " | Out-Default
-  $result = Get-R53ResourceRecordSet -HostedZoneId $config.HostedZoneId -StartRecordName $computer.name -MaxItems 1
-  $rs = $result.ResourceRecordSets[0]
-  
-  if($rs.Name -eq "$($computer.name).") {
-    "[$($computer.name)]`t[R53] entry found" | Out-Default
-    "[$($computer.name)]`t[R53] delete entry" | Out-Default
-    $action = (new-object Amazon.Route53.Model.Change).WithAction('DELETE').WithResourceRecordSet($rs)
-    Edit-R53ResourceRecordSet -HostedZoneId $config.HostedZoneId -ChangeBatch_Changes $action | Out-Null
-  } else { "[$($computer.name)]`t[R53] entry not found (returned entry is for $($rs.Name))" | Out-Default }
-  "[$($computer.name)]`t[R53] create entry" | Out-Default
-  $record = (new-object Amazon.Route53.Model.ResourceRecord).WithValue($computer.instance.PublicDnsName)
-  $rs = (new-object Amazon.Route53.Model.ResourceRecordSet).WithName($computer.name).WithType('CNAME').WithTTL('10').WithResourceRecords($record)
-  $action = (new-object Amazon.Route53.Model.Change).WithAction('CREATE').WithResourceRecordSet($rs)
-  Edit-R53ResourceRecordSet -HostedZoneId $config.HostedZoneId -ChangeBatch_Changes $action | Out-Null
-}
+$lab | % { .\Register-CNAME.ps1 $config $_.name $_.instance.PublicDnsName }
 
 "update DNS on clients..." | Out-Default
 function Update-DNS($clientIP, $dnsIP) {
