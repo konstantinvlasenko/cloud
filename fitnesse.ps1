@@ -19,6 +19,9 @@ $filter.Name = 'tag:Name'
 $filter.Value = 'TeamCity'  
 $volumeId = (Get-EC2Volume -Filter $filter).VolumeId
 Add-EC2Volume $volumeId $instanceId xvdf
+do {
+  Sleep 5
+}while((Test-Path 'd:') -ne $true)
 
 #pull latest configuration
 cd d:\config\projects
