@@ -2,6 +2,7 @@ param($lab)
 $config = iex (new-object System.Text.ASCIIEncoding).GetString((Invoke-WebRequest -Uri http://169.254.169.254/latest/user-data -UseBasicParsing).Content)
 Set-DefaultAWSRegion us-east-1
 $lab | % { $_.name += ".$($config.DomainName)" }
+$lab | ? { $_.type -eq $null } | % { $_.type = $config.DefaultInstanceType }
 $lab | % { $_ | Out-Default }
 # check if the lab already started
 $instances = Get-EC2Tag | ? ResourceType -eq Instance | ? Key -eq Name | ? Value -eq $lab[0].name | % ResourceId | % { Get-EC2InstanceStatus $_ } | ? { $_.InstanceState.Code -eq 16}
@@ -17,9 +18,9 @@ $images = Get-EC2Image | ? Visibility -eq Private
 $role = Get-IAMInstanceProfileForRole S3Reader
 
 # create spot requests
-$lab | ? {$_.zone -eq $null} | % { $_.request = Request-EC2SpotInstance -SpotPrice $_.maxbid -LaunchSpecification_InstanceType $_.type -LaunchSpecification_ImageId ($images | ? Name -eq $_.amiName).ImageId -LaunchSpecification_SecurityGroupId $config.SecurityGroup -LaunchSpecification_InstanceProfile_Arn $role.Arn -LaunchSpecification_InstanceProfile_Id $role.InstanceProfileId }
+$lab | ? { $_.zone -eq $null } | % { $_.request = Request-EC2SpotInstance -SpotPrice $_.maxbid -LaunchSpecification_InstanceType $_.type -LaunchSpecification_ImageId ($images | ? Name -eq $_.amiName).ImageId -LaunchSpecification_SecurityGroupId $config.SecurityGroup -LaunchSpecification_InstanceProfile_Arn $role.Arn -LaunchSpecification_InstanceProfile_Id $role.InstanceProfileId }
 
-$lab | ? {$_.zone -ne $null} | % { $_.request = Request-EC2SpotInstance -SpotPrice $_.maxbid -LaunchSpecification_Placement_AvailabilityZone $_.zone -LaunchSpecification_InstanceType $_.type -LaunchSpecification_ImageId ($images | ? Name -eq $_.amiName).ImageId -LaunchSpecification_SecurityGroupId $config.SecurityGroup -LaunchSpecification_InstanceProfile_Arn $role.Arn -LaunchSpecification_InstanceProfile_Id $role.InstanceProfileId }
+$lab | ? { $_.zone -ne $null } | % { $_.request = Request-EC2SpotInstance -SpotPrice $_.maxbid -LaunchSpecification_Placement_AvailabilityZone $_.zone -LaunchSpecification_InstanceType $_.type -LaunchSpecification_ImageId ($images | ? Name -eq $_.amiName).ImageId -LaunchSpecification_SecurityGroupId $config.SecurityGroup -LaunchSpecification_InstanceProfile_Arn $role.Arn -LaunchSpecification_InstanceProfile_Id $role.InstanceProfileId }
 
 "waiting for spot requests fulfilment..." | Out-Default
 do {
