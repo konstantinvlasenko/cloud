@@ -21,7 +21,7 @@ $hostedZones | Out-Default
 $hostedZoneId = $hostedZones | ? {$_.Name -eq "$($config.DomainName)."} | % {$_.Id.split('/')[-1]}
 "[R53]`t[HostedZoneId] $hostedZoneId" | Out-Default
 if($config.AssumeRoles.R53 -ne $null) {
-  $result = Get-R53ResourceRecordSet -HostedZoneId $hostedZoneId -StartRecordName $name -MaxItems 1 -AccessKey $credentials.Credentials.AccessKeyId -SecretKey $credentials.Credentials.SecretAccessKey -SessionToken $credentials.Credentials.SessionToken
+  $result = Get-R53ResourceRecordSet -HostedZoneId $hostedZoneId -StartRecordName $name -MaxItems 1 -AccessKey $credentials.AccessKeyId -SecretKey $credentials.SecretAccessKey -SessionToken $credentials.SessionToken
 }
 else {
   $result = Get-R53ResourceRecordSet -HostedZoneId $hostedZoneId -StartRecordName $name -MaxItems 1
