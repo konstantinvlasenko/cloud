@@ -1,5 +1,9 @@
 $config = iex (new-object System.Text.ASCIIEncoding).GetString((Invoke-WebRequest -Uri http://169.254.169.254/latest/user-data -UseBasicParsing).Content)
 Set-DefaultAWSRegion us-east-1
+if($config.SNS -ne $null) {
+  [Environment]::SetEnvironmentVariable("SNS", $config.SNS, "Machine")
+}
+
 if($config.ssh -ne $null) {
   # download .ssh folder from AWS S3
   Read-S3Object -BucketName $config.ssh.Bucket -KeyPrefix $config.ssh.KeyPrefix -Folder "$($env:USERPROFILE)\.ssh"
