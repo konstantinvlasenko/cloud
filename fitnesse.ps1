@@ -32,10 +32,9 @@ cd d:\config\projects
 git pull
 
 # start TeamCity
-start-service TCBuildAgent 
-start-service TCBuildAgent1 
-start-service TCBuildAgent2
-start-service TeamCity
+Restart-Service TCBuildAgent 
+Restart-Service TCBuildAgent1 
+Start-Service TeamCity
 
 # search computer by name
 Invoke-WmiMethod -path Win32_NetworkAdapterConfiguration -Name SetDNSSuffixSearchOrder -ArgumentList @($config.DomainName)
