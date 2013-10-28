@@ -32,6 +32,9 @@ cd d:\config\projects
 git pull
 
 # start TeamCity
+start-service TCBuildAgent 
+start-service TCBuildAgent1 
+start-service TCBuildAgent2
 start-service TeamCity
 
 # search computer by name
