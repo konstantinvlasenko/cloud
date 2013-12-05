@@ -34,6 +34,7 @@ git pull
 # start TeamCity
 Restart-Service TCBuildAgent 
 Restart-Service TCBuildAgent1 
+Restart-Service TCBuildAgent3
 Start-Service TeamCity
 
 # search computer by name
