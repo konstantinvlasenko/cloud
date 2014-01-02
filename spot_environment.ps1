@@ -1,10 +1,11 @@
 param($lab)
 $config = iex (new-object System.Text.ASCIIEncoding).GetString((Invoke-WebRequest -Uri http://169.254.169.254/latest/user-data -UseBasicParsing).Content)
 $DefaultAWSRegion = 'us-east-1'
-if($config.DefaultAWSRegion -ne $null)
+if($config.DefaultAWSRegion -ne $null) {
   $DefaultAWSRegion = $config.DefaultAWSRegion
+}
 Set-DefaultAWSRegion $DefaultAWSRegion
-"**************************************************`n*`tDefault AWS Region - $DefaultAWSRegion`n**************************************************" | Out-Default
+"*********************************`n*`tDefault AWS Region - $DefaultAWSRegion`n*********************************" | Out-Default
 
 $lab | % { $_.name += ".$($config.DomainName)" }
 $lab | ? { $_.type -eq $null } | % { $_.type = $config.DefaultInstanceType }
