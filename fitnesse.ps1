@@ -1,5 +1,6 @@
 $config = iex (new-object System.Text.ASCIIEncoding).GetString((Invoke-WebRequest -Uri http://169.254.169.254/latest/user-data -UseBasicParsing).Content)
-Set-DefaultAWSRegion us-east-1
+$DefaultAWSRegion = (ConvertFrom-Json (Invoke-WebRequest -Uri http://169.254.169.254/latest/dynamic/instance-identity/document -UseBasicParsing).Content).region
+Set-DefaultAWSRegion $DefaultAWSRegion
 if($config.SNS -ne $null) {
   [Environment]::SetEnvironmentVariable("SNS", $config.SNS, "Machine")
 }
