@@ -2,7 +2,7 @@ param($lab)
 $config = iex (new-object System.Text.ASCIIEncoding).GetString((Invoke-WebRequest -Uri http://169.254.169.254/latest/user-data -UseBasicParsing).Content)
 $DefaultAWSRegion = (ConvertFrom-Json (Invoke-WebRequest -Uri http://169.254.169.254/latest/dynamic/instance-identity/document -UseBasicParsing).Content).region
 Set-DefaultAWSRegion $DefaultAWSRegion
-"*********************************`n*`tDefault AWS Region - $DefaultAWSRegion`n*********************************" | Out-Default
+"************************************`n*`tDefault AWS Region - $DefaultAWSRegion`n************************************" | Out-Default
 
 $lab | % { $_.name += ".$($config.DomainName)" }
 $lab | ? { $_.type -eq $null } | % { $_.type = $config.DefaultInstanceType }
@@ -21,9 +21,10 @@ $images = Get-EC2Image | ? Visibility -eq Private
 $role = Get-IAMInstanceProfileForRole S3Reader
 
 # create spot requests
-$lab | ? { $_.zone -eq $null } | % { $_.request = Request-EC2SpotInstance -SpotPrice $_.maxbid -LaunchSpecification_InstanceType $_.type -LaunchSpecification_ImageId ($images | ? Name -eq $_.amiName).ImageId -LaunchSpecification_SecurityGroupId $config.SecurityGroup -LaunchSpecification_InstanceProfile_Arn $role.Arn -LaunchSpecification_InstanceProfile_Id $role.InstanceProfileId }
+$sgId = (Get-EC2SecurityGroup -GroupName $config.SecurityGroup).GroupId
+$lab | ? { $_.zone -eq $null } | % { $_.request = Request-EC2SpotInstance -SpotPrice $_.maxbid -LaunchSpecification_InstanceType $_.type -LaunchSpecification_ImageId ($images | ? Name -eq $_.amiName).ImageId -LaunchSpecification_SecurityGroupId $sgId -LaunchSpecification_InstanceProfile_Arn $role.Arn -LaunchSpecification_InstanceProfile_Id $role.InstanceProfileId }
 
-$lab | ? { $_.zone -ne $null } | % { $_.request = Request-EC2SpotInstance -SpotPrice $_.maxbid -LaunchSpecification_Placement_AvailabilityZone $_.zone -LaunchSpecification_InstanceType $_.type -LaunchSpecification_ImageId ($images | ? Name -eq $_.amiName).ImageId -LaunchSpecification_SecurityGroupId $config.SecurityGroup -LaunchSpecification_InstanceProfile_Arn $role.Arn -LaunchSpecification_InstanceProfile_Id $role.InstanceProfileId }
+$lab | ? { $_.zone -ne $null } | % { $_.request = Request-EC2SpotInstance -SpotPrice $_.maxbid -LaunchSpecification_Placement_AvailabilityZone $_.zone -LaunchSpecification_InstanceType $_.type -LaunchSpecification_ImageId ($images | ? Name -eq $_.amiName).ImageId -LaunchSpecification_SecurityGroupId $sgId -LaunchSpecification_InstanceProfile_Arn $role.Arn -LaunchSpecification_InstanceProfile_Id $role.InstanceProfileId }
 
 "waiting for spot requests fulfilment..." | Out-Default
 do {
