@@ -7,7 +7,10 @@ Param(
   $name,
   [parameter(Mandatory=$true)]
   [string]
-  $cname
+  $target,
+  [string]
+  $targetType = 'CNAME'
+  
 )
 
 "[R53]`t[$name] update... " | Out-Default
@@ -32,13 +35,22 @@ $rs = $result.ResourceRecordSets[0]
 if($rs.Name -eq "$name.") {
   "[R53]`t[$name] entry found" | Out-Default
   "[R53]`t[$name] delete entry" | Out-Default
-  $action = (new-object Amazon.Route53.Model.Change).WithAction('DELETE').WithResourceRecordSet($rs)
+  $change = new-object Amazon.Route53.Model.Change
+  $change.Action = 'DELETE'
+  $change.ResourceRecordSet = $rs
   
-  Edit-R53ResourceRecordSet -HostedZoneId $hostedZoneId -ChangeBatch_Changes $action -AccessKey $credentials.AccessKeyId -SecretKey $credentials.SecretAccessKey -SessionToken $credentials.SessionToken | Out-Null
+  Edit-R53ResourceRecordSet -HostedZoneId $hostedZoneId -ChangeBatch_Changes $change -AccessKey $credentials.AccessKeyId -SecretKey $credentials.SecretAccessKey -SessionToken $credentials.SessionToken | Out-Null
 } else { "[R53]`t[$name] entry not found (returned entry is for $($rs.Name))" | Out-Default }
 "[R53]`t[$name] create entry" | Out-Default
-$record = (new-object Amazon.Route53.Model.ResourceRecord).WithValue($cname)
-$rs = (new-object Amazon.Route53.Model.ResourceRecordSet).WithName($name).WithType('CNAME').WithTTL('10').WithResourceRecords($record)
-$action = (new-object Amazon.Route53.Model.Change).WithAction('CREATE').WithResourceRecordSet($rs)
+$record = new-object Amazon.Route53.Model.ResourceRecord
+$record.Value = $target
+$rs = New-Object Amazon.Route53.Model.ResourceRecordSet
+$rs.Name = $name
+$rs.Type = $targetType
+$rs.TTL = '10'
+$rs.ResourceRecords = $record
+$change = new-object Amazon.Route53.Model.Change
+$change.Action = 'CREATE'
+$change.ResourceRecordSet = $rs
 
-Edit-R53ResourceRecordSet -HostedZoneId $hostedZoneId -ChangeBatch_Changes $action -AccessKey $credentials.AccessKeyId -SecretKey $credentials.SecretAccessKey -SessionToken $credentials.SessionToken | Out-Null
+Edit-R53ResourceRecordSet -HostedZoneId $hostedZoneId -ChangeBatch_Changes $change -AccessKey $credentials.AccessKeyId -SecretKey $credentials.SecretAccessKey -SessionToken $credentials.SessionToken | Out-Null
