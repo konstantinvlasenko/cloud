@@ -16,9 +16,6 @@ Param(
 $ri = Get-EC2ReservedInstance $ReservedInstancesId
 $type = $ri.InstanceType                          # Instance type from the reservation
 $az = $ri.AvailabilityZone                        # Availability Zone from the reservation
-$region = $az -replace ".$"                       # Region Zone from the reservation
-
-Set-DefaultAWSRegion $region
 
 $userdata = gc $user_data_file -Raw
 $userdata64 = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($userdata))
