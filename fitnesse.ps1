@@ -47,7 +47,8 @@ if($config.fitnesse -ne $null) {
   # clone PowerSlim
   git clone https://github.com/konstantinvlasenko/PowerSlim.git
   # download Fitnesse
-  (new-object System.Net.WebClient).DownloadFile('http://fitnesse.org/fitnesse-standalone.jar?responder=releaseDownload&release=20140630', 'c:\PowerSlim\fitnesse-standalone.jar')
+  #(new-object System.Net.WebClient).DownloadFile('http://fitnesse.org/fitnesse-standalone.jar?responder=releaseDownload&release=20140630', 'c:\PowerSlim\fitnesse-standalone.jar')
+  (new-object System.Net.WebClient).DownloadFile('http://s3.amazonaws.com/Vlasenko/Fitnesse/fitnesse-standalone.jar', 'c:\PowerSlim\fitnesse-standalone.jar')
   iex $config.fitnesse
   # start Fitnesse 
   cd c:\PowerSlim
