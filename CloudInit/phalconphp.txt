@@ -8,6 +8,7 @@ packages:
  - apache2
  - php5
  - php5-phalcon
+ - php5-pgsql
  - git
  
 output:
