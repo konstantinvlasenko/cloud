@@ -1,0 +1,29 @@
+#cloud-config
+apt_sources:
+ - source: "ppa:phalcon/stable"
+
+apt_upgrade: true
+
+packages:
+ - apache2
+ - php5
+ - php5-phalcon
+ - git
+ 
+output:
+  all: '| tee -a /var/log/cloud-init-output.log'  # generate a detailed log of the cloud init build
+  
+ 
+runcmd:
+ # install apache
+ - [ a2enmod, rewrite ]
+ - service apache2 restart
+ 
+ # install composer
+ - curl -sS https://getcomposer.org/installer | php
+ - [ mv, composer.phar, /usr/local/bin/composer ]
+ 
+ # install phalcon dev tools
+ - git clone https://github.com/phalcon/phalcon-devtools.git /home/ubuntu/phalcon-devtools
+ - [ ln, -s, /home/ubuntu/phalcon-devtools/phalcon.php, /usr/bin/phalcon ]
+ - [ chmod, ugo+x, /usr/bin/phalcon ]
