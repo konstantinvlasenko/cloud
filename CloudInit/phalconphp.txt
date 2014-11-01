@@ -12,13 +12,33 @@ packages:
  
 output:
   all: '| tee -a /var/log/cloud-init-output.log'  # generate a detailed log of the cloud init build
-  
+
+write_files:
+-   content: |
+      <VirtualHost *:80>
+
+          ServerAdmin admin@example.host
+          DocumentRoot "/var/www/vhosts/test/public"
+          DirectoryIndex index.php
+          ServerName example.host
+          ServerAlias www.example.host
+          ErrorLog /var/www/vhosts/test/log/error.log
+
+          <Directory "/var/vhosts/www/test/public">
+              Options All
+              AllowOverride All
+              Allow from all
+              RewriteEngine On
+              RewriteCond %{REQUEST_FILENAME} !-d
+              RewriteCond %{REQUEST_FILENAME} !-f
+              RewriteRule ^(.*)$ index.php?_url=/$1 [QSA,L]
+          </Directory>
+
+      </VirtualHost>
+    owner: root:root
+    path: /etc/apache2/sites-available/000-default.conf.test
  
 runcmd:
- # install apache
- - [ a2enmod, rewrite ]
- - service apache2 restart
- 
  # install composer
  - curl -sS https://getcomposer.org/installer | php
  - [ mv, composer.phar, /usr/local/bin/composer ]
@@ -27,3 +47,20 @@ runcmd:
  - git clone https://github.com/phalcon/phalcon-devtools.git /home/ubuntu/phalcon-devtools
  - [ ln, -s, /home/ubuntu/phalcon-devtools/phalcon.php, /usr/bin/phalcon ]
  - [ chmod, ugo+x, /usr/bin/phalcon ]
+ 
+ # create project
+ - [ cd, /home/ubuntu ]
+ - phalcon project test
+ - echo "<br/>Configured by <a href='https://github.com/konstantinvlasenko/cloud/blob/master/CloudInit/phalconphp.txt'>CloudInit</a>" >> test/app/views/index/index.volt
+ - [ mkdir, test/log ]
+ - [ chmod, -R, a+w, test/app/cache ] # to avoid error: Volt directory can't be written
+  
+ # configure apache virtual hosting
+ - [ mkdir, -p, /var/www/vhosts ]
+ - [ ln, -s, /home/ubuntu/test, /var/www/vhosts/test ]
+ - [ mv, /etc/apache2/sites-available/000-default.conf, /etc/apache2/sites-available/000-default.conf.orig ]
+ - [ mv, /etc/apache2/sites-available/000-default.conf.test, /etc/apache2/sites-available/000-default.conf ]
+ 
+ # restart apache
+ - [ a2enmod, rewrite ]
+ - service apache2 restart
