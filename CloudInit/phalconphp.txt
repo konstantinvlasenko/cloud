@@ -51,6 +51,8 @@ runcmd:
  # create project
  - [ cd, /home/ubuntu ]
  - phalcon project test
+ - [ rm, test/.htaccess, -f ]         # we will use apache config (/etc/apache2/sites-available/000-default.conf)
+ - [ rm, test/public/.htaccess, -f ]  # we will use apache config (/etc/apache2/sites-available/000-default.conf)
  - echo "<br/>Configured by <a href='https://github.com/konstantinvlasenko/cloud/blob/master/CloudInit/phalconphp.txt'>CloudInit</a>" >> test/app/views/index/index.volt
  - [ mkdir, test/log ]
  - [ chmod, -R, a+w, test/app/cache ] # to avoid error: Volt directory can't be written
