@@ -26,7 +26,7 @@ write_files:
           ServerAlias www.example.host
           ErrorLog /var/www/vhosts/test/log/error.log
 
-          <Directory "/var/vhosts/www/test/public">
+          <Directory "/var/www/vhosts/test/public">
               Options All
               AllowOverride All
               Allow from all
