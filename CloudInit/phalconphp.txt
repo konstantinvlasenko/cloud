@@ -35,6 +35,11 @@ write_files:
               RewriteCond %{REQUEST_FILENAME} !-f
               RewriteRule ^(.*)$ index.php?_url=/$1 [QSA,L]
           </Directory>
+          
+          Alias /simplesaml /var/simplesamlphp/www
+          <Directory /var/simplesamlphp/www/>
+            Require all granted
+          </Directory>
 
       </VirtualHost>
     owner: root:root
@@ -43,6 +48,12 @@ write_files:
 runcmd:
  # enable mcrypt
  - [ php5enmod, mcrypt ]
+ 
+ # install SimpleSamlPHP
+ - [ cd, /var ]
+ - wget https://simplesamlphp.org/res/downloads/simplesamlphp-1.13.1.tar.gz
+ - tar xzf simplesamlphp-1.13.1.tar.gz
+ - [ mv, simplesamlphp-1.13.1.tar.gz, simplesamlphp ]
  
  # install composer
  - curl -sS https://getcomposer.org/installer | php
