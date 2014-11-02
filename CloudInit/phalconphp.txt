@@ -53,7 +53,7 @@ runcmd:
  - [ cd, /var ]
  - wget https://simplesamlphp.org/res/downloads/simplesamlphp-1.13.1.tar.gz
  - tar xzf simplesamlphp-1.13.1.tar.gz
- - [ mv, simplesamlphp-1.13.1.tar.gz, simplesamlphp ]
+ - [ mv, simplesamlphp-1.13.1, simplesamlphp ]
  
  # install composer
  - curl -sS https://getcomposer.org/installer | php
