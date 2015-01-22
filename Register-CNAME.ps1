@@ -9,14 +9,18 @@ Param(
   [string]
   $target,
   [string]
-  $targetType = 'CNAME'
+  $targetType = 'CNAME',
+  [string]
+  $AssumeRoleArn,
+  [string]
+  $AssumeRoleSessionName
   
 )
 
 "[R53]`t[$name] update... " | Out-Default
-if($config.AssumeRoles.R53 -ne $null) {
+if($AssumeRoleArn -ne $null) {
   "[R53]`t[$name] using assume role $($config.AssumeRoles.R53.ARN)" | Out-Default
-  $credentials = (Use-STSRole -RoleArn $config.AssumeRoles.R53.ARN -RoleSessionName $config.AssumeRoles.R53.SessionName).Credentials
+  $credentials = (Use-STSRole -RoleArn $AssumeRoleArn -RoleSessionName $AssumeRoleSessionName).Credentials
 }
 # We will fall-back to the current account if $credential -eq $null
 $hostedZones = Get-R53HostedZones -AccessKey $credentials.AccessKeyId -SecretKey $credentials.SecretAccessKey -SessionToken $credentials.SessionToken

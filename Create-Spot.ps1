@@ -60,16 +60,4 @@ do {
   Sleep 30
 } while( (Get-EC2InstanceStatus $spot.InstanceId).Status.Status.Value -ne 'ok' )
 
-# get instances
-$instance = (Get-EC2Instance $spot.InstanceId).RunningInstance
-
-# update R53
-if($subdomain -eq 'www') { 
-  # use PublicIpAddress as we want to create the top domain alias (you can use only A record)
-  .\Register-CNAME.ps1 $config $name $instance.PublicIpAddress 'A'
-}
-else {
-  .\Register-CNAME.ps1 $config $name $instance.PublicDnsName
-}
-
-
+$spot.InstanceId
