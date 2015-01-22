@@ -18,6 +18,8 @@ Param(
   [string]
   $name,
   [string]
+  $region = 'us-east-1',
+  [string]
   $user_data_file
 )
 
