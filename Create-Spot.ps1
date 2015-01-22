@@ -16,11 +16,7 @@ Param(
   $SecurityGroup,
   [parameter(Mandatory=$true)]
   [string]
-  $domain,
-  [string]
-  $subdomain = 'www',
-  [string]
-  $region = 'us-east-1',
+  $name,
   [string]
   $user_data_file
 )
@@ -43,8 +39,6 @@ do {
 } while( $spot.State -eq 'open' )
 
 # set instance name
-$config = @{ DomainName = $domain }
-$name = "$subdomain.$domain"
 $tag = new-object Amazon.EC2.Model.Tag
 $tag.Key = "Name"
 $tag.Value = $name

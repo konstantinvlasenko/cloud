@@ -1,8 +1,5 @@
 Param(
   [parameter(Mandatory=$true)]
-  [hashtable]
-  $config,
-  [parameter(Mandatory=$true)]
   [string]
   $name,
   [parameter(Mandatory=$true)]
@@ -19,15 +16,14 @@ Param(
 
 "[R53]`t[$name] update... " | Out-Default
 if($AssumeRoleArn -ne $null) {
-  "[R53]`t[$name] using assume role $($config.AssumeRoles.R53.ARN)" | Out-Default
   $credentials = (Use-STSRole -RoleArn $AssumeRoleArn -RoleSessionName $AssumeRoleSessionName).Credentials
 }
 # We will fall-back to the current account if $credential -eq $null
 $hostedZones = Get-R53HostedZones -AccessKey $credentials.AccessKeyId -SecretKey $credentials.SecretAccessKey -SessionToken $credentials.SessionToken
 $hostedZones | Out-Default
-$hostedZoneId = $hostedZones | ? {$_.Name -eq "$($config.DomainName)."} | % {$_.Id.split('/')[-1]}
+$hostedZoneId = $hostedZones | ? {$_.Name -eq "$($name.Split('.')[-2,-1] -join '.')."} | % {$_.Id.split('/')[-1]}
 "[R53]`t[HostedZoneId] $hostedZoneId" | Out-Default
-if($config.AssumeRoles.R53 -ne $null) {
+if($AssumeRoleArn -ne $null) {
   $result = Get-R53ResourceRecordSet -HostedZoneId $hostedZoneId -StartRecordName $name -MaxItems 1 -AccessKey $credentials.AccessKeyId -SecretKey $credentials.SecretAccessKey -SessionToken $credentials.SessionToken
 }
 else {
