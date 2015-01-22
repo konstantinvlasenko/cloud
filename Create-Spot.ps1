@@ -19,12 +19,15 @@ Param(
   [string]
   $region = 'us-east-1',
   [string]
-  $user_data_file = 'CloudInit\nullUserData.ps1'
+  $user_data_file
 )
 
 Set-DefaultAWSRegion $region
-$userdata = gc $user_data_file -Raw
-$userdata64 = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($userdata))
+if($user_data_file)
+{
+  $userdata = gc $user_data_file -Raw
+  $userdata64 = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($userdata))
+}
 $role = Get-IAMInstanceProfileForRole $iamRoleName
 $spot =  Request-EC2SpotInstance -SpotPrice 0.01 -LaunchSpecification_InstanceType $type -LaunchSpecification_ImageId $ami -LaunchSpecification_SecurityGroups 'AD.FE' -LaunchSpecification_IamInstanceProfile_Arn $role.Arn -LaunchSpecification_UserData $userdata64 -LaunchSpecification_KeyName $key -LaunchSpecification_Placement_AvailabilityZone us-east-1c
 
