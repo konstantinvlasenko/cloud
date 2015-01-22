@@ -8,12 +8,15 @@ Param(
   [string]
   $targetType = 'CNAME',
   [string]
+  $region = 'us-east-1',
+  [string]
   $AssumeRoleArn,
   [string]
   $AssumeRoleSessionName
   
 )
 
+Set-DefaultAWSRegion $region
 "[R53]`t[$name] update... " | Out-Default
 if($AssumeRoleArn -ne $null) {
   $credentials = (Use-STSRole -RoleArn $AssumeRoleArn -RoleSessionName $AssumeRoleSessionName).Credentials
