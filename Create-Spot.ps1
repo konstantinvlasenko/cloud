@@ -24,6 +24,7 @@ Param(
 )
 
 Set-DefaultAWSRegion $region
+if($user_data_file - eq $null) { $user_data_file = 'CloudInit\nullUserData.ps1' }
 $userdata = gc $user_data_file -Raw
 $userdata64 = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($userdata))
 $role = Get-IAMInstanceProfileForRole $iamRoleName
