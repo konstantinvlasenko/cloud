@@ -7,9 +7,6 @@ Param(
   $type,
   [parameter(Mandatory=$true)]
   [string]
-  $user_data_file,
-  [parameter(Mandatory=$true)]
-  [string]
   $iamRoleName,
   [parameter(Mandatory=$true)]
   [string]
@@ -20,11 +17,12 @@ Param(
   [string]
   $subdomain = 'www',
   [string]
-  $region = 'us-east-1'
+  $region = 'us-east-1',
+  [string]
+  $user_data_file = 'CloudInit\nullUserData.ps1'
 )
 
 Set-DefaultAWSRegion $region
-if($user_data_file -eq $null) { $user_data_file = 'CloudInit\nullUserData.ps1' }
 $userdata = gc $user_data_file -Raw
 $userdata64 = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($userdata))
 $role = Get-IAMInstanceProfileForRole $iamRoleName
