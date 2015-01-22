@@ -13,6 +13,9 @@ Param(
   $key,
   [parameter(Mandatory=$true)]
   [string]
+  $SecurityGroup,
+  [parameter(Mandatory=$true)]
+  [string]
   $domain,
   [string]
   $subdomain = 'www',
@@ -29,7 +32,7 @@ if($user_data_file)
   $userdata64 = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($userdata))
 }
 $role = Get-IAMInstanceProfileForRole $iamRoleName
-$spot =  Request-EC2SpotInstance -SpotPrice 0.01 -LaunchSpecification_InstanceType $type -LaunchSpecification_ImageId $ami -LaunchSpecification_SecurityGroups 'AD.FE' -LaunchSpecification_IamInstanceProfile_Arn $role.Arn -LaunchSpecification_UserData $userdata64 -LaunchSpecification_KeyName $key -LaunchSpecification_Placement_AvailabilityZone us-east-1c
+$spot =  Request-EC2SpotInstance -SpotPrice 0.6 -LaunchSpecification_InstanceType $type -LaunchSpecification_ImageId $ami -LaunchSpecification_SecurityGroups $SecurityGroup -LaunchSpecification_IamInstanceProfile_Arn $role.Arn -LaunchSpecification_UserData $userdata64 -LaunchSpecification_KeyName $key -LaunchSpecification_Placement_AvailabilityZone us-east-1c
 
 "waiting for spot request fulfilment..." | Out-Default
 do {
