@@ -16,8 +16,8 @@ $instanceId = (Invoke-WebRequest -Uri http://169.254.169.254/latest/meta-data/in
 
 # set instance name
 New-EC2Tag -ResourceId $instanceId -Tag (new-object Amazon.EC2.Model.Tag).WithKey('Name').WithValue("ci.$($config.DomainName)")
-.\Register-CNAME.ps1 "ci.$($config.DomainName)" $cname $DefaultAWSRegion $config.AssumeRoles.R53.ARN $config.AssumeRoles.R53.SessionName
-.\Register-CNAME.ps1 "fitnesse.$($config.DomainName)" $cname $DefaultAWSRegion $config.AssumeRoles.R53.ARN $config.AssumeRoles.R53.SessionName
+.\Register-CNAME.ps1 "ci.$($config.DomainName)" $cname CNAME $DefaultAWSRegion $config.AssumeRoles.R53.ARN $config.AssumeRoles.R53.SessionName
+.\Register-CNAME.ps1 "fitnesse.$($config.DomainName)" $cname CNAME $DefaultAWSRegion $config.AssumeRoles.R53.ARN $config.AssumeRoles.R53.SessionName
 
 # attach EBS volume with TeamCity data
 $filter = new-object Amazon.EC2.Model.Filter  
