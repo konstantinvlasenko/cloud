@@ -52,7 +52,7 @@ $lab | % { $_.instance = (Get-EC2Instance $_.request.InstanceId).RunningInstance
 $lab | % { "[$($_.name)]`t$($_.instance.PublicDnsName)" | Out-Default }
 
 # update R53
-$lab | % { .\Register-CNAME.ps1 $config $_.name $_.instance.PublicDnsName }
+$lab | % { .\Register-CNAME.ps1 $_.name $_.instance.PublicDnsName CNAME $DefaultAWSRegion $config.AssumeRoles.R53.ARN $config.AssumeRoles.R53.SessionName }
 
 "update DNS on clients..." | Out-Default
 function Update-DNS($clientIP, $dnsIP) {
