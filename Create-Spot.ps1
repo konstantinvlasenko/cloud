@@ -16,7 +16,7 @@ if($env:EC2UserData) { $userdata64 = [System.Convert]::ToBase64String( [System.T
 
 $role = Get-IAMInstanceProfileForRole $env:IAMRole
 
-$spot =  Request-EC2SpotInstance -SpotPrice $env:SpotPrice -LaunchSpecification_InstanceType $type -LaunchSpecification_ImageId $ami -LaunchSpecification_SecurityGroups $env:SecurityGroup -LaunchSpecification_IamInstanceProfile_Arn $role.Arn -LaunchSpecification_UserData $userdata64
+$spot =  Request-EC2SpotInstance -SpotPrice $env:SpotPrice -LaunchSpecification_InstanceType $type -LaunchSpecification_ImageId $ami -LaunchSpecification_SecurityGroup $env:SecurityGroup -LaunchSpecification_IamInstanceProfile_Arn $role.Arn -LaunchSpecification_UserData $userdata64
 
 "waiting for spot request fulfilment..." | Out-Default
 do {
