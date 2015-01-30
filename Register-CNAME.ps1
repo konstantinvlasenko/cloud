@@ -6,27 +6,20 @@ Param(
   [string]
   $target,
   [string]
-  $targetType = 'CNAME',
-  [string]
-  $region = 'us-east-1',
-  [string]
-  $AssumeRoleArn,
-  [string]
-  $AssumeRoleSessionName
-  
+  $targetType = 'CNAME'
 )
 
-Set-DefaultAWSRegion $region
+Set-DefaultAWSRegion $env:AWSRegion
 "[R53]`t[$name] update... " | Out-Default
-if($AssumeRoleArn -ne $null) {
-  $credentials = (Use-STSRole -RoleArn $AssumeRoleArn -RoleSessionName $AssumeRoleSessionName).Credentials
+if($env:AssumeRoleArn -ne $null) {
+  $credentials = (Use-STSRole -RoleArn $env:AssumeRoleArn -RoleSessionName $env:AssumeRoleSessionName).Credentials
 }
 # We will fall-back to the current account if $credential -eq $null
 $hostedZones = Get-R53HostedZones -AccessKey $credentials.AccessKeyId -SecretKey $credentials.SecretAccessKey -SessionToken $credentials.SessionToken
 $hostedZones | Out-Default
 $hostedZoneId = $hostedZones | ? {$_.Name -eq "$($name.Split('.')[-2,-1] -join '.')."} | % {$_.Id.split('/')[-1]}
 "[R53]`t[HostedZoneId] $hostedZoneId" | Out-Default
-if($AssumeRoleArn -ne $null) {
+if($env:AssumeRoleArn -ne $null) {
   $result = Get-R53ResourceRecordSet -HostedZoneId $hostedZoneId -StartRecordName $name -MaxItems 1 -AccessKey $credentials.AccessKeyId -SecretKey $credentials.SecretAccessKey -SessionToken $credentials.SessionToken
 }
 else {
