@@ -12,7 +12,7 @@ Param(
 
 Set-DefaultAWSRegion $env:AWSRegion
 
-if($env:EC2UserData) { $userdata64 = [System.Convert]::ToBase64String($env:EC2UserData) }
+if($env:EC2UserData) { $userdata64 = [System.Convert]::ToBase64String( [System.Text.Encoding]::UTF8.GetBytes( $env:EC2UserData ) ) }
 
 $role = Get-IAMInstanceProfileForRole $env:IAMRole
 
