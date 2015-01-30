@@ -7,30 +7,15 @@ Param(
   $type,
   [parameter(Mandatory=$true)]
   [string]
-  $iamRoleName,
-  [parameter(Mandatory=$true)]
-  [string]
-  $key,
-  [parameter(Mandatory=$true)]
-  [string]
-  $SecurityGroup,
-  [parameter(Mandatory=$true)]
-  [string]
-  $name,
-  [string]
-  $region = 'us-east-1',
-  [string]
-  $user_data_file
+  $name
 )
 
-Set-DefaultAWSRegion $region
-if($user_data_file)
-{
-  $userdata = gc $user_data_file -Raw
-  $userdata64 = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($userdata))
-}
-$role = Get-IAMInstanceProfileForRole $iamRoleName
-$spot =  Request-EC2SpotInstance -SpotPrice 0.6 -LaunchSpecification_InstanceType $type -LaunchSpecification_ImageId $ami -LaunchSpecification_SecurityGroups $SecurityGroup -LaunchSpecification_IamInstanceProfile_Arn $role.Arn -LaunchSpecification_UserData $userdata64 -LaunchSpecification_KeyName $key -LaunchSpecification_Placement_AvailabilityZone us-east-1c
+Set-DefaultAWSRegion $env:AWSRegion
+if($env:EC2UserData)
+  $userdata64 = [System.Convert]::ToBase64String($env:EC2UserData)
+$role = Get-IAMInstanceProfileForRole $env:IAMRole
+
+$spot =  Request-EC2SpotInstance -SpotPrice $env:SpotPrice -LaunchSpecification_InstanceType $type -LaunchSpecification_ImageId $ami -LaunchSpecification_SecurityGroups $env:SecurityGroup -LaunchSpecification_IamInstanceProfile_Arn $role.Arn -LaunchSpecification_UserData $userdata64
 
 "waiting for spot request fulfilment..." | Out-Default
 do {
