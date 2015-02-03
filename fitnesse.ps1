@@ -23,7 +23,7 @@ $cname = (Invoke-WebRequest -Uri http://169.254.169.254/latest/meta-data/public-
 $instanceId = (Invoke-WebRequest -Uri http://169.254.169.254/latest/meta-data/instance-id -UseBasicParsing).Content
 
 # set instance name
-New-EC2Tag -ResourceId $instanceId -Tag (new-object Amazon.EC2.Model.Tag).WithKey('Name').WithValue("ci.$($config.DomainName)")
+New-EC2Tag -Resource $instanceId -Tag @{ Key="Name"; Value="ci.$($config.DomainName)" }
 .\Register-CNAME.ps1 "ci.$($config.DomainName)" $cname
 .\Register-CNAME.ps1 "fitnesse.$($config.DomainName)" $cname
 
