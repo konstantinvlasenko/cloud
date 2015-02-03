@@ -14,13 +14,18 @@ if($config.ssh -ne $null) {
   Read-S3Object -BucketName $config.ssh.Bucket -KeyPrefix $config.ssh.KeyPrefix -Folder "$($env:USERPROFILE)\.ssh"
 }
 
+if($config.AssumeRoles.R53 -ne $null) {
+  [Environment]::SetEnvironmentVariable("AssumeRoleArn",$config.AssumeRoles.R53.ARN, "Machine")
+  [Environment]::SetEnvironmentVariable("AssumeRoleSessionName",$config.AssumeRoles.R53.SessionName, "Machine")
+}
+
 $cname = (Invoke-WebRequest -Uri http://169.254.169.254/latest/meta-data/public-hostname -UseBasicParsing).Content
 $instanceId = (Invoke-WebRequest -Uri http://169.254.169.254/latest/meta-data/instance-id -UseBasicParsing).Content
 
 # set instance name
 New-EC2Tag -ResourceId $instanceId -Tag (new-object Amazon.EC2.Model.Tag).WithKey('Name').WithValue("ci.$($config.DomainName)")
-.\Register-CNAME.ps1 "ci.$($config.DomainName)" $cname CNAME $DefaultAWSRegion $config.AssumeRoles.R53.ARN $config.AssumeRoles.R53.SessionName
-.\Register-CNAME.ps1 "fitnesse.$($config.DomainName)" $cname CNAME $DefaultAWSRegion $config.AssumeRoles.R53.ARN $config.AssumeRoles.R53.SessionName
+.\Register-CNAME.ps1 "ci.$($config.DomainName)" $cname
+.\Register-CNAME.ps1 "fitnesse.$($config.DomainName)" $cname
 
 # attach EBS volume with TeamCity data
 $volumeId = (Get-EC2Volume -Filters @{ Name="tag:Name"; Values=@("TeamCity") }).VolumeId
