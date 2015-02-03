@@ -2,6 +2,9 @@ $config = iex (new-object System.Text.ASCIIEncoding).GetString((Invoke-WebReques
 $DefaultAWSRegion = (ConvertFrom-Json (Invoke-WebRequest -Uri http://169.254.169.254/latest/dynamic/instance-identity/document -UseBasicParsing).Content).region
 Set-DefaultAWSRegion $DefaultAWSRegion
 [Environment]::SetEnvironmentVariable("AWSRegion", $DefaultAWSRegion, "Machine")
+if($config.Bucket -ne $null) {
+  [Environment]::SetEnvironmentVariable("Bucket", $config.Bucket, "Machine")
+}
 if($config.SNS -ne $null) {
   [Environment]::SetEnvironmentVariable("SNS", $config.SNS, "Machine")
 }
@@ -20,11 +23,8 @@ New-EC2Tag -ResourceId $instanceId -Tag (new-object Amazon.EC2.Model.Tag).WithKe
 .\Register-CNAME.ps1 "fitnesse.$($config.DomainName)" $cname CNAME $DefaultAWSRegion $config.AssumeRoles.R53.ARN $config.AssumeRoles.R53.SessionName
 
 # attach EBS volume with TeamCity data
-$filter = new-object Amazon.EC2.Model.Filter  
-$filter.Name = 'tag:Name'  
-$filter.Value = 'TeamCity'  
-$volumeId = (Get-EC2Volume -Filter $filter).VolumeId
-Add-EC2Volume $volumeId $instanceId xvdf
+$volumeId = (Get-EC2Volume -Filters @{ Name="tag:Name"; Values=@("TeamCity") }).VolumeId
+Add-EC2Volume $instanceId $volumeId xvdf
 do {
   Sleep 5
 }while((Test-Path 'd:') -ne $true)
@@ -48,7 +48,6 @@ if($config.fitnesse -ne $null) {
   git clone https://github.com/konstantinvlasenko/PowerSlim.git
   # download Fitnesse
   Invoke-WebRequest 'http://fitnesse.org/fitnesse-standalone.jar?responder=releaseDownload&release=20150114' -OutFile 'c:\PowerSlim\fitnesse-standalone.jar'
-  #(new-object System.Net.WebClient).DownloadFile('http://s3.amazonaws.com/Vlasenko/Fitnesse/fitnesse-standalone.jar', 'c:\PowerSlim\fitnesse-standalone.jar')
   iex $config.fitnesse
   # start Fitnesse 
   cd c:\PowerSlim
