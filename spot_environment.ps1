@@ -44,7 +44,7 @@ do {
 "wait for reachability test..." | Out-Default
 do {
   Sleep 30
-} while( ($lab | ? { (Get-EC2InstanceStatus $_.request.InstanceId).Status -ne 'ok' }) -ne $null )
+} while( ($lab | ? { (Get-EC2InstanceStatus $_.request.InstanceId).Status.Status -ne 'ok' }) -ne $null )
 
 # get instances
 $lab | % { $_.instance = (Get-EC2Instance $_.request.InstanceId).RunningInstance }
