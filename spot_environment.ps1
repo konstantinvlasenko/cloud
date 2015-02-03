@@ -5,7 +5,7 @@ Set-DefaultAWSRegion $DefaultAWSRegion
 "************************************`n*`tDefault AWS Region - $DefaultAWSRegion`n************************************" | Out-Default
 
 $lab | % { $_.name += ".$($config.DomainName)" }
-$lab | ? { $_.type -eq $null } | % { $_.type = $config.DefaultInstanceType }
+$lab | ? { $_.type -eq $null } | % { $_.type = $env:DefaultInstanceType }
 $lab | % { $_ | Out-Default }
 # check if the lab already started
 $instances = Get-EC2Tag | ? ResourceType -eq Instance | ? Key -eq Name | ? Value -eq $lab[0].name | % ResourceId | % { Get-EC2InstanceStatus $_ } | ? { $_.InstanceState.Code -eq 16}
@@ -15,16 +15,15 @@ if($instances -ne $null) {
 }
 
 # obtain all Private images
-$images = Get-EC2Image | ? Visibility -eq Private
+$images = Get-EC2Image | ? Public -eq $false
 
 # S3Reader role
 $role = Get-IAMInstanceProfileForRole S3Reader
 
 # create spot requests
-$sgId = (Get-EC2SecurityGroup -GroupName $config.SecurityGroup).GroupId
-$lab | ? { $_.zone -eq $null } | % { $_.request = Request-EC2SpotInstance -SpotPrice $_.maxbid -LaunchSpecification_InstanceType $_.type -LaunchSpecification_ImageId ($images | ? Name -eq $_.amiName).ImageId -LaunchSpecification_SecurityGroupId $sgId -LaunchSpecification_InstanceProfile_Arn $role.Arn -LaunchSpecification_InstanceProfile_Id $role.InstanceProfileId }
+$lab | ? { $_.zone -eq $null } | % { $_.request = Request-EC2SpotInstance -SpotPrice $_.maxbid -LaunchSpecification_InstanceType $_.type -LaunchSpecification_ImageId ($images | ? Name -eq $_.amiName).ImageId -LaunchSpecification_SecurityGroup $config.SecurityGroup -IamInstanceProfile_Arn $role.Arn }
 
-$lab | ? { $_.zone -ne $null } | % { $_.request = Request-EC2SpotInstance -SpotPrice $_.maxbid -LaunchSpecification_Placement_AvailabilityZone $_.zone -LaunchSpecification_InstanceType $_.type -LaunchSpecification_ImageId ($images | ? Name -eq $_.amiName).ImageId -LaunchSpecification_SecurityGroupId $sgId -LaunchSpecification_InstanceProfile_Arn $role.Arn -LaunchSpecification_InstanceProfile_Id $role.InstanceProfileId }
+$lab | ? { $_.zone -ne $null } | % { $_.request = Request-EC2SpotInstance -SpotPrice $_.maxbid -LaunchSpecification_Placement_AvailabilityZone $_.zone -LaunchSpecification_InstanceType $_.type -LaunchSpecification_ImageId ($images | ? Name -eq $_.amiName).ImageId -LaunchSpecification_SecurityGroup $config.SecurityGroup -IamInstanceProfile_Arn $role.Arn }
 
 "waiting for spot requests fulfilment..." | Out-Default
 do {
@@ -35,7 +34,7 @@ do {
 } while( ($lab | ? { $_.request.State -eq 'open'} ) -ne $null )
 
 # set instances name
-$lab | % { New-EC2Tag -ResourceId $_.request.InstanceId -Tag (new-object Amazon.EC2.Model.Tag).WithKey('Name').WithValue($_.name) }
+$lab | % { New-EC2Tag -Resource $_.request.InstanceId -Tag @{ Key="Name"; Value=$_.name } }
 
 "wait for instances running..." | Out-Default 
 do {
@@ -45,14 +44,14 @@ do {
 "wait for reachability test..." | Out-Default
 do {
   Sleep 30
-} while( ($lab | ? { (Get-EC2InstanceStatus $_.request.InstanceId).InstanceStatusDetail.Detail.Status -ne 'passed' }) -ne $null )
+} while( ($lab | ? { (Get-EC2InstanceStatus $_.request.InstanceId).Status -ne 'ok' }) -ne $null )
 
 # get instances
 $lab | % { $_.instance = (Get-EC2Instance $_.request.InstanceId).RunningInstance }
 $lab | % { "[$($_.name)]`t$($_.instance.PublicDnsName)" | Out-Default }
 
 # update R53
-$lab | % { .\Register-CNAME.ps1 $_.name $_.instance.PublicDnsName CNAME $DefaultAWSRegion $config.AssumeRoles.R53.ARN $config.AssumeRoles.R53.SessionName }
+$lab | % { .\Register-CNAME.ps1 $_.name $_.instance.PublicDnsName }
 
 "update DNS on clients..." | Out-Default
 function Update-DNS($clientIP, $dnsIP) {
