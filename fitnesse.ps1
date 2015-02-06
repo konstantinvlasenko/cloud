@@ -47,13 +47,14 @@ Start-Service TeamCity
 # search computer by name
 Invoke-WmiMethod -path Win32_NetworkAdapterConfiguration -Name SetDNSSuffixSearchOrder -ArgumentList @($config.DomainName)
 
-if($config.fitnesse -ne $null) {
+if($config.git -ne $null) {
+  [Environment]::SetEnvironmentVariable("Repository", $config.git, "Machine")
   cd c:\
   # clone PowerSlim
   git clone https://github.com/konstantinvlasenko/PowerSlim.git
   # download Fitnesse
   Invoke-WebRequest 'http://s3.amazonaws.com/Vlasenko/Fitnesse/fitnesse-standalone.jar' -OutFile 'c:\PowerSlim\fitnesse-standalone.jar'
-  iex $config.fitnesse
+  iex "git clone -b fitnesse --single-branch $($config.git) fitnesse"
   # start Fitnesse 
   cd c:\PowerSlim
   java -jar fitnesse-standalone.jar -d c:\fitnesse -p 8081
