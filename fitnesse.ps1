@@ -52,7 +52,7 @@ if($config.fitnesse -ne $null) {
   # clone PowerSlim
   git clone https://github.com/konstantinvlasenko/PowerSlim.git
   # download Fitnesse
-  Invoke-WebRequest 'http://fitnesse.org/fitnesse-standalone.jar?responder=releaseDownload&release=20150114' -OutFile 'c:\PowerSlim\fitnesse-standalone.jar'
+  Invoke-WebRequest 'http://s3.amazonaws.com/Vlasenko/Fitnesse/fitnesse-standalone.jar' -OutFile 'c:\PowerSlim\fitnesse-standalone.jar'
   iex $config.fitnesse
   # start Fitnesse 
   cd c:\PowerSlim
