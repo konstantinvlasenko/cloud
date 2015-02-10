@@ -36,10 +36,7 @@ do {
 } while( $spot.State -eq 'open' )
 
 # set instance name
-$tag = new-object Amazon.EC2.Model.Tag
-$tag.Key = "Name"
-$tag.Value = $name
-New-EC2Tag -ResourceId $spot.InstanceId -Tag $tag
+New-EC2Tag -Resource $spot.InstanceId -Tag @{ Key="Name"; Value=$name }
 
 "wait for instances running..." | Out-Default 
 do {
