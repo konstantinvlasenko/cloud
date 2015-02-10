@@ -18,7 +18,9 @@ $role = Get-IAMInstanceProfileForRole $env:IAMRole
 
 if($env:SubnetId)
 {
-  $spot =  Request-EC2SpotInstance -SpotPrice $env:SpotPrice -LaunchSpecification_InstanceType $type -LaunchSpecification_ImageId $ami -LaunchSpecification_AllSecurityGroup $env:SecurityGroup -IamInstanceProfile_Arn $role.Arn -LaunchSpecification_UserData $userdata64 -LaunchSpecification_SubnetId $env:SubnetId
+  $sg = new-object Amazon.EC2.Model.GroupIdentifier
+  $sg.GroupId = $env:SecurityGroup;
+  $spot =  Request-EC2SpotInstance -SpotPrice $env:SpotPrice -LaunchSpecification_InstanceType $type -LaunchSpecification_ImageId $ami -LaunchSpecification_AllSecurityGroup $sg -IamInstanceProfile_Arn $role.Arn -LaunchSpecification_UserData $userdata64 -LaunchSpecification_SubnetId $env:SubnetId
 }
 else
 {
