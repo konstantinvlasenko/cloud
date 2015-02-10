@@ -21,6 +21,7 @@ if($env:SubnetId)
   $n = New-Object Amazon.EC2.Model.InstanceNetworkInterfaceSpecification
   $n.AssociatePublicIpAddress = $true
   $n.Groups.Add($env:SecurityGroup)
+  $n.DeviceIndex = 0
   #$n.PrivateIpAddress = "10.0.0.1"
   $n.SubnetId = $env:SubnetId
 
