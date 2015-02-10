@@ -9,6 +9,10 @@ if($config.SNS -ne $null) {
   [Environment]::SetEnvironmentVariable("SNS", $config.SNS, "Machine")
 }
 
+if($config.git -ne $null) {
+  [Environment]::SetEnvironmentVariable("Repository", $config.git, "Machine")
+}
+
 if($config.ssh -ne $null) {
   # download .ssh folder from AWS S3
   Read-S3Object -BucketName $config.ssh.Bucket -KeyPrefix $config.ssh.KeyPrefix -Folder "$($env:USERPROFILE)\.ssh"
@@ -48,7 +52,6 @@ Start-Service TeamCity
 Invoke-WmiMethod -path Win32_NetworkAdapterConfiguration -Name SetDNSSuffixSearchOrder -ArgumentList @($config.DomainName)
 
 if($config.git -ne $null) {
-  [Environment]::SetEnvironmentVariable("Repository", $config.git, "Machine")
   cd c:\
   # clone PowerSlim
   git clone https://github.com/konstantinvlasenko/PowerSlim.git
