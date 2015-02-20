@@ -20,8 +20,6 @@ Process {
   do {
     Sleep 30
   } while( (Get-EC2InstanceStatus $spot.InstanceId).Status.Status.Value -ne 'ok' )
-
-  $spot.InstanceId
 }
 
 End {
