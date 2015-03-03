@@ -40,7 +40,19 @@ if($rs.Name -eq "$name.") {
   $change.Action = 'DELETE'
   $change.ResourceRecordSet = $rs
   
-  Edit-R53ResourceRecordSet -HostedZoneId $hostedZoneId -ChangeBatch_Changes $change -AccessKey $credentials.AccessKeyId -SecretKey $credentials.SecretAccessKey -SessionToken $credentials.SessionToken | Out-Null
+  do
+  {
+    <#
+    http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DNSLimitations.html
+    ChangeResourceRecordSets requests – If Amazon Route 53 can't process a request before the next request arrives, it will reject subsequent requests for the same hosted zone and return an HTTP 400 error (Bad request). The response header also includes a Code element with a value of PriorRequestNotComplete and a Message element with a value of The request was rejected because Route 53 was still processing a prior request.
+    #>
+    try
+    {
+      Edit-R53ResourceRecordSet -HostedZoneId $hostedZoneId -ChangeBatch_Changes $change -AccessKey $credentials.AccessKeyId -SecretKey $credentials.SecretAccessKey -SessionToken $credentials.SessionToken | Out-Null
+      break
+    } catch { $_.Exception.Message }
+    Sleep 3
+  } while ( $true );
 } else { "[R53]`t[$name] entry not found (returned entry is for $($rs.Name))" | Out-Default }
 "[R53]`t[$name] create entry" | Out-Default
 $record = new-object Amazon.Route53.Model.ResourceRecord
