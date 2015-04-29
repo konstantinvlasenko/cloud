@@ -4,10 +4,7 @@ Param(
   $ami,
   [parameter(Mandatory=$true)]
   [string]
-  $type,
-  [parameter(Mandatory=$true)]
-  [string]
-  $name
+  $type
 )
 
 Set-DefaultAWSRegion $env:AWSRegion
@@ -27,25 +24,4 @@ else
   $spot =  Request-EC2SpotInstance -SpotPrice $env:SpotPrice -LaunchSpecification_InstanceType $type -LaunchSpecification_ImageId $ami -LaunchSpecification_SecurityGroup $env:SecurityGroup -IamInstanceProfile_Arn $role.Arn -LaunchSpecification_UserData $userdata64
 }
 
-"waiting for spot request fulfilment..." | Out-Default
-do {
-  Sleep 30
-  # update spot requests information
-  $spot = Get-EC2SpotInstanceRequest $spot.SpotInstanceRequestId
-  $spot.Status.Message | Out-Default
-} while( $spot.State -eq 'open' )
-
-# set instance name
-New-EC2Tag -Resource $spot.InstanceId -Tag @{ Key="Name"; Value=$name }
-
-"wait for instances running..." | Out-Default 
-do {
-  Sleep 30
-} while( (Get-EC2InstanceStatus $spot.InstanceId).InstanceState.Name -ne 'running' )
-
-"wait for reachability test..." | Out-Default
-do {
-  Sleep 30
-} while( (Get-EC2InstanceStatus $spot.InstanceId).Status.Status.Value -ne 'ok' )
-
-$spot.InstanceId
+$spot.SpotInstanceRequestId
