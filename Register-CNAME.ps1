@@ -17,9 +17,13 @@ if($env:AssumeRoleArn -ne $null) {
 # We will fall-back to the current account if $credential -eq $null
 $hostedZones = Get-R53HostedZones -AccessKey $credentials.AccessKeyId -SecretKey $credentials.SecretAccessKey -SessionToken $credentials.SessionToken
 $hostedZones | Out-Default
+
+"$($name.Split('.')[-3, -2,-1] -join '.')." | Out-Default
+
 $hostedZoneId = @($hostedZones) | ? {$_.Name -eq "$($name.Split('.')[-3, -2,-1] -join '.')."} | % {$_.Id.split('/')[-1]}
 if($hostedZoneId -eq $null)
 {
+  "$($name.Split('.')[-2,-1] -join '.')." | Out-Default 
   $hostedZoneId = @($hostedZones) | ? {$_.Name -eq "$($name.Split('.')[-2,-1] -join '.')."} | % {$_.Id.split('/')[-1]}
 }
 
