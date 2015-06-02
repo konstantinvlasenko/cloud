@@ -17,7 +17,7 @@ Restore-RDSDBInstanceFromDBSnapshot -DBInstanceIdentifier $Identifier -DBSnapsho
 "wait for instances running..." | Out-Default 
 do{
 	Sleep 30
-}while(Get-RDSDBInstance -DBInstanceIdentifier $Identifier).DBInstanceStatus -ne 'available' )
+}while((Get-RDSDBInstance -DBInstanceIdentifier $Identifier).DBInstanceStatus -ne 'available' )
 
 
  
