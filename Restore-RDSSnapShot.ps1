@@ -14,10 +14,3 @@ Param(
 Set-DefaultAWSRegion $env:AWSRegion
 
 Restore-RDSDBInstanceFromDBSnapshot -DBInstanceIdentifier $Identifier -DBSnapshotIdentifier $snapshot -DBInstanceClass $type -DBSubnetGroupName $subnetGroupName
-"wait for instances running..." | Out-Default 
-do{
-	Sleep 30
-}while((Get-RDSDBInstance -DBInstanceIdentifier $Identifier).DBInstanceStatus -ne 'available' )
-
-
- 
