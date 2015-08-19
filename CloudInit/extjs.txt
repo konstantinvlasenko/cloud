@@ -1,0 +1,50 @@
+#cloud-config
+
+apt_upgrade: true
+
+packages:
+ - python-pip
+ - default-jre
+ - git
+ - unzip
+ 
+output:
+  all: '| tee -a /var/log/cloud-init-output.log'  # generate a detailed log of the cloud init build
+  
+# Provide debconf answers / debian preseed values
+# See debconf-set-selections man page.
+debconf_selections: |
+  console-setup   console-setup/codeset47 select  . Combined - Latin; Slavic Cyrillic; Greek
+  console-setup   console-setup/fontsize-text47   select  16
+  console-setup   console-setup/fontsize-fb47     select  16
+  console-setup   console-setup/charmap47         select  KOI8-R
+  console-setup   console-setup/fontface47        select  Fixed
+
+runcmd:
+ # install AWS CLI
+ - [ pip, install, awscli ]
+ 
+ # download ssh key
+ - [ export, "AWS_DEFAULT_REGION=us-east-1" ]
+ - [ aws, s3, sync, "s3://vlasenko/.ssh", /home/ubuntu/.ssh ]
+ - [ chmod, 600, /home/ubuntu/.ssh/id_rsa ]
+ - [ chown, ubuntu, /home/ubuntu/.ssh/id_rsa ]
+ 
+ # download ExtJS
+ - curl http://cdn.sencha.com/ext/gpl/ext-6.0.0-gpl.zip -o ext-6.0.0-gpl.zip
+ - [ unzip, ext-6.0.0-gpl.zip, -d, /home/ubuntu ]
+ - [ rm, ext-6.0.0-gpl.zip ]
+ 
+ # download and install SenchaCMD
+ - curl http://cdn.sencha.com/cmd/6.0.0.202/no-jre/SenchaCmd-6.0.0.202-linux-amd64.sh.zip -o SenchaCmd-6.0.0.202-linux-amd64.sh.zip
+ - [ unzip, SenchaCmd-6.0.0.202-linux-amd64.sh.zip, -d, /home/ubuntu ]
+ - [ rm, SenchaCmd-6.0.0.202-linux-amd64.sh.zip ]
+ - sudo -u ubuntu ./home/ubuntu/SenchaCmd-6.0.0.202-linux-amd64.sh -q
+ 
+ # configure apache virtual hosting
+ - [ mv, /etc/apache2/sites-available/000-default.conf, /etc/apache2/sites-available/000-default.conf.orig ]
+ - [ mv, /etc/apache2/sites-available/000-default.conf.test, /etc/apache2/sites-available/000-default.conf ]
+ 
+ # restart apache
+ - [ a2enmod, proxy ]
+ - service apache2 restart
