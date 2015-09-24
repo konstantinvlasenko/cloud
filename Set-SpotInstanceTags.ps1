@@ -2,11 +2,10 @@ Param($spotId)
 
 Begin {
   Set-DefaultAWSRegion $env:AWSRegion
-  $spot = Get-EC2SpotInstanceRequest $spotId
+  $spot = Get-EC2SpotInstanceRequest -SpotInstanceRequestId $spotId
 }
 
 Process {
-  $instanceId | out-default
   New-EC2Tag -Resource $spot.InstanceId -Tag @{ Key=$_.Key; Value=$_.Value }
 }
 
