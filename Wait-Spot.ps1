@@ -7,19 +7,19 @@ Process {
   do {
     Sleep 30
     # update spot requests information
-    $spot = Get-EC2SpotInstanceRequest $_
+    $spot = Get-EC2SpotInstanceRequest -SpotInstanceRequestId $_
     $spot.Status.Message | Out-Default
   } while( $spot.State -eq 'open' )
 
   "wait for instances running..." | Out-Default 
   do {
     Sleep 30
-  } while( (Get-EC2InstanceStatus $spot.InstanceId).InstanceState.Name -ne 'running' )
+  } while( (Get-EC2InstanceStatus -InstanceId $spot.InstanceId).InstanceState.Name -ne 'running' )
 
   "wait for reachability test..." | Out-Default
   do {
     Sleep 30
-  } while( (Get-EC2InstanceStatus $spot.InstanceId).Status.Status.Value -ne 'ok' )
+  } while( (Get-EC2InstanceStatus -InstanceId $spot.InstanceId).Status.Status.Value -ne 'ok' )
 }
 
 End {
