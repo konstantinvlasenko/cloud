@@ -1,0 +1,14 @@
+<powershell>
+@"
+`$password = 'YOUR_PASSWORD'
+`$secstr = New-Object -TypeName System.Security.SecureString
+`$password.ToCharArray() | % {`$secstr.AppendChar(`$_)}
+Install-ADDSForest -DomainName 'YOUR_DOMAIN.local' -InstallDNS -SafeModeAdministratorPassword $secstr -Confirm:`$false -NoRebootOnCompletion
+Set-ADAccountPassword -Identity Administrator -NewPassword $secstr -Reset
+Restart-Computer
+"@ | Out-File C:\InstallForest.ps1
+schtasks /create /tn InstallForest /tr 'PowerShell -NonInteractive -ExecutionPolicy bypass -file C:\InstallForest.ps1' /sc onstart /RU SYSTEM
+Install-WindowsFeature -name AD-Domain-Services -IncludeManagementTools
+tzutil /s 'Eastern Standard Time'
+Rename-Computer -NewName YOUR-DC -Restart
+</powershell>
