@@ -1,0 +1,34 @@
+#cloud-config
+
+apt_upgrade: true
+
+packages:
+ - readline-devel # prerequisites for OpenResty installation
+ - pcre-devel     # prerequisites for OpenResty installation
+ - openssl-devel  # prerequisites for OpenResty installation
+ - gcc            # prerequisites for OpenResty installation
+ - httpd-tools    # basic authentication
+ - docker
+ 
+output:
+  all: '| tee -a /var/log/cloud-init-output.log'  # generate a detailed log of the cloud init build
+
+runcmd:
+ # install OpenResty 
+ - curl https://openresty.org/download/ngx_openresty-1.9.3.2.tar.gz > ngx_openresty-1.9.3.2.tar.gz
+ - tar xzvf ngx_openresty-1.9.3.2.tar.gz
+ - [ rm, ngx_openresty-1.9.3.2.tar.gz ]
+ - [ cd, ngx_openresty-1.9.3.2 ]
+ - ./configure
+ - make
+ - make install
+ # start Docker
+ - [ service, docker, start ]
+ - [ usermod, -a, -G, docker, ec2-user ]
+ # run elasticsearch containers
+ - docker run -t -p 9201:9200 -p 9301:9300 -d elasticsearch
+ - docker run -t -p 9202:9200 -p 9302:9300 -d elasticsearch
+ # start nginx
+ - /usr/local/openresty/nginx/sbin/nginx
+ 
+ 
