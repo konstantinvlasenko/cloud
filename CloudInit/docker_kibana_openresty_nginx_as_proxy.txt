@@ -22,13 +22,14 @@ runcmd:
  - ./configure
  - make
  - make install
+ # set shortcut for nginx stop/start
+ - curl https://gist.githubusercontent.com/konstantinvlasenko/0fb225431dddc27805f0/raw/249f907e465e98ac099437025218a15e55a34b4c/nginx > /etc/init.d/nginx
+ - chmod +x /etc/init.d/nginx
  # start Docker
  - [ service, docker, start ]
  - [ usermod, -a, -G, docker, ec2-user ]
- # run elasticsearch containers
+ # run elasticsearch/kibana containers
  - docker run -t -p 9201:9200 -p 9301:9300 -d elasticsearch
  - docker run -t -p 9202:9200 -p 9302:9300 -d elasticsearch
  # start nginx
  - /usr/local/openresty/nginx/sbin/nginx
- 
- 
