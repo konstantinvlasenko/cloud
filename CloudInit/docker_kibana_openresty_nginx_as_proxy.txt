@@ -12,8 +12,62 @@ packages:
  
 output:
   all: '| tee -a /var/log/cloud-init-output.log'  # generate a detailed log of the cloud init build
+  
+write_files:
+  - content: |
+        worker_processes  2;
+        events {
+            worker_connections  1024;
+        }
+        http {
+            include       mime.types;
+            default_type  application/octet-stream;
+            sendfile        on;
+            keepalive_timeout  65;
+
+            lua_package_path '/scripts/?.lua';
+            lua_shared_dict sessions 10m;
+            lua_code_cache off;
+
+            server {
+                listen       80;
+                server_name  http://kibana.nmsp.org;
+                location / {
+                    auth_basic "Restricted Content";
+                    auth_basic_user_file .htpasswd;
+                    set $container 0;
+                    access_by_lua_file /scripts/rewrite.lua;
+                    proxy_pass http://127.0.0.1:$container;
+                }
+            }
+        }
+    owner: root:root
+    path: /usr/local/openresty/nginx/conf/nginx.conf.template
+  - content: |
+        cson = require "cjson"
+        local auth_user = ngx.var.remote_user
+
+        if auth_user == nil then
+            ngx.redirect("/")
+            return
+        end
+
+        if auth_user == "user1" then
+            ngx.var.container = "5601"
+            return
+        end
+
+        if auth_user == "user2" then
+            ngx.var.container = "5602"
+            return
+        end
+    owner: root:root
+    path: /scripts/rewrite.lua
 
 runcmd:
+ # download dynamodb-go-elastic
+ - curl http://s3.amazonaws.com/Vlasenko/dynamodb-go-elastic/test > /home/ec2-user/test
+ - chmod +x /home/ec2-user/test
  # install OpenResty 
  - curl https://openresty.org/download/ngx_openresty-1.9.3.2.tar.gz > ngx_openresty-1.9.3.2.tar.gz
  - tar xzvf ngx_openresty-1.9.3.2.tar.gz
@@ -22,6 +76,9 @@ runcmd:
  - ./configure
  - make
  - make install
+ # configure nginx
+ - [ mv, /usr/local/openresty/nginx/conf/nginx.conf, /usr/local/openresty/nginx/conf/nginx.conf.orig ]
+ - [ mv, /usr/local/openresty/nginx/conf/nginx.conf.template, /usr/local/openresty/nginx/conf/nginx.conf ]
  # set shortcut for nginx stop/start
  - curl https://gist.githubusercontent.com/konstantinvlasenko/0fb225431dddc27805f0/raw/249f907e465e98ac099437025218a15e55a34b4c/nginx > /etc/init.d/nginx
  - chmod +x /etc/init.d/nginx
@@ -32,4 +89,4 @@ runcmd:
  - docker run -t -p 9201:9200 -p 9301:9300 -d elasticsearch
  - docker run -t -p 9202:9200 -p 9302:9300 -d elasticsearch
  # start nginx
- - /usr/local/openresty/nginx/sbin/nginx
+ - service nginx start
