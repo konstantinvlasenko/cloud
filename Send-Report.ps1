@@ -73,7 +73,7 @@ if($xml -ne $null)
         }
     else
         {
-        return "<tr><td class=""tg-xdyu"">$($xml.build.buildType.name)</td><td class=""$tdstyle"">-</td><td class=""tg-031e"">-</td><td class=""tg-031e"">-</td><td class=""tg-031e"">-</td><td class=""tg-031e"">-</td><td class=""tg-031e"">-</td><td class=""tg-mzz2"">-</td></tr>"
+        return "<tr><td class=""tg-xdyu"">$($xml.build.buildType.name)</td><td class=""$tdstyle"">-</td><td class=""tg-031e"">Latest:$($xml.build.number)</td><td class=""tg-031e"">-</td><td class=""tg-031e"">-</td><td class=""tg-031e"">-</td><td class=""tg-031e"">-</td><td class=""tg-mzz2"">-</td></tr>"
         }
     }
 }
@@ -104,9 +104,12 @@ $result += get_result $xml $xml.build.number
 echo "Get all the test result"
 foreach ($build in $acceptanceTests)
 {
-    $command = $($serverAddress + "/httpAuth/app/rest/buildTypes/id:$build/builds/running:false/")
-    $xml = [xml]$(Execute-HTTPPostCommand $command)
-    $result += get_result $xml $xml.build.number
+    if($buildType -ne $build)
+    {
+        $command = $($serverAddress + "/httpAuth/app/rest/buildTypes/id:$build/builds/running:false/")
+        $xml = [xml]$(Execute-HTTPPostCommand $command)
+        $result += get_result $xml $xml.build.number
+    }
 }
 $result += "</table></body></html>"
 
