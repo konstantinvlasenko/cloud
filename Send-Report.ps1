@@ -1,4 +1,4 @@
-﻿param($tc_user,$tc_psw,$smtpServer,$smtpPort,$username,$password,$from,$receivers,$serverAddress,$labManager,$acceptanceTests,$buildType)
+﻿param($tc_user,$tc_psw,$smtpServer,$smtpPort,$username,$password,$from,$receivers,$serverAddress,$labManager,$acceptanceTests,$buildType,$product)
 
 function Execute-HTTPPostCommand() {
     param(
@@ -50,12 +50,10 @@ foreach ($build in $buildList)
 function get_result($xml,$v)
 {
 if($xml -ne $null)
-    {
-    if($v -eq $version)
-        {
+    {   
         $command = $serverAddress + $xml.build.statistics.href
         $statisticsXml = [xml]$(Execute-HTTPPostCommand $command)
-        $buildDuration = (($statisticsXml.properties.property | ?{"BuildDuration" -eq $_.name}).value.Substring(0,4)/60).ToString("f1")
+        $buildDuration = ([int](($statisticsXml.properties.property | ?{"BuildDuration" -eq $_.name}).value)*0.00001667).ToString("f1")
         $startDate = $xml.build.startDate.Substring(0,13)
         $startDate = $startDate.Substring(0,4) + "/" + $startDate.Substring(4,2)+ "/" + $startDate.Substring(6,2) + " " + $startDate.Substring(9,2) + ":" + $startDate.Substring(11,2)
         $formattedStartDate =  (Get-Date $startDate).ToUniversalTime().AddHours(8).ToString('yyyy/MM/dd HH:mm')
@@ -68,12 +66,13 @@ if($xml -ne $null)
         $urls = $xml.build.webUrl.Split('/')
         $logUrl = $($serverAddress + "/" + $urls[$urls.length-1])
         if($xml.build.status -eq "FAILURE"){$tdstyle="tg-mzz2"} else {$tdstyle="tg-uhi5"}
-
+    if($v -eq $version)
+        {
         return "<tr><td class=""tg-xdyu"">$($xml.build.buildType.name)</td><td class=""$tdstyle"">$($xml.build.status)</td><td class=""tg-031e""><a href=""$logUrl"">$($xml.build.number)</a></td><td class=""tg-031e"">$formattedStartDate</td><td class=""tg-031e"">$buildDuration</td><td class=""tg-031e"">$totalTestCount</td><td class=""tg-031e"">$passedTestCount</td><td class=""tg-mzz2"">$failedTestCount</td></tr>"
         }
     else
         {
-        return "<tr><td class=""tg-xdyu"">$($xml.build.buildType.name)</td><td class=""$tdstyle"">-</td><td class=""tg-031e"">Latest:$($xml.build.number)</td><td class=""tg-031e"">-</td><td class=""tg-031e"">-</td><td class=""tg-031e"">-</td><td class=""tg-031e"">-</td><td class=""tg-mzz2"">-</td></tr>"
+        return "<tr><td class=""tg-xdyu"">$($xml.build.buildType.name)</td><td class=""tg-vnts"">$($xml.build.status)</td><td class=""tg-vnts""><a href=""$logUrl"">$($xml.build.number)</a></td><td class=""tg-vnts"">$formattedStartDate</td><td class=""tg-vnts"">$buildDuration</td><td class=""tg-vnts"">$totalTestCount</td><td class=""tg-vnts"">$passedTestCount</td><td class=""tg-vnts"">$failedTestCount</td></tr>"
         }
     }
 }
@@ -91,6 +90,7 @@ $result = @"
 .tg .tg-xdyu{font-weight:bold;font-style:italic}
 .tg .tg-mzz2{font-weight:bold;color:#fe0000}
 .tg .tg-uhi5{font-weight:bold;color:#32cb00}
+.tg .tg-vnts{font-weight:bold;color:#808080}
 </style>
 </head><body>
 <table class="tg"><tr><th class="tg-wv6k">Acceptance Tests</th><th class="tg-wv6k">Status</th><th class="tg-wv6k">Build</th><th class="tg-wv6k">Start Date</th><th class="tg-wv6k">Build Duration(m)</th><th class="tg-wv6k">Total Tests</th><th class="tg-wv6k">Tests Passed</th><th class="tg-wv6k">Tests Failed</th></tr>
@@ -114,5 +114,5 @@ foreach ($build in $acceptanceTests)
 $result += "</table></body></html>"
 
 echo "Send emails"
-sendEmail "MNSP Test Result($version)" $result
+sendEmail "$product Test Result($version)" $result
 }
