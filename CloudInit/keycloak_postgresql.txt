@@ -1,0 +1,13 @@
+#cloud-config
+apt_upgrade: true
+packages:
+ - docker
+ 
+output:
+  all: '| tee -a /var/log/cloud-init-output.log'  # generate a detailed log of the cloud init build
+
+runcmd:
+  # start Docker
+  - [ service, docker, start ]
+  - [ usermod, -a, -G, docker, ec2-user ]
+  - docker run --name keycloak -e KEYCLOAK_USER=admin -e KEYCLOAK_PASSWORD=admin -e POSTGRES_PORT_5432_TCP_ADDR=<HOST> -e POSTGRES_DATABASE=keycloak -e POSTGRES_USER=<USER> -e POSTGRES_PASSWORD=<PASSWORD> jboss/keycloak-postgres
